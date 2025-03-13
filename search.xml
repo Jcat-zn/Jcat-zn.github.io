@@ -218,4 +218,64 @@
         <tag>渗透</tag>
       </tags>
   </entry>
+  <entry>
+    <title>数据结构之跳表</title>
+    <url>/2024/03/18/skipList/</url>
+    <content><![CDATA[<blockquote>
+<p>本次实验主要讲解了数据结构中的跳表以及应用</p>
+</blockquote>
+<h1 id="什么是跳表"><a href="#什么是跳表" class="headerlink" title="什么是跳表?"></a>什么是跳表?</h1><h2 id="网上回答"><a href="#网上回答" class="headerlink" title="网上回答"></a>网上回答</h2><p><font face="逐浪立楷" size=5>跳表是一种数据结构。它使得包含n个元素的有序序列的查找和插入操作的平均时间复杂度都是 O(logn)，快速的查询效果是通过维护一个多层次的链表实现的，且与前一层（下面一层）链表元素的数量相比，每一层链表中的元素的数量更少。</font></p>
+<h2 id="跳表的查找"><a href="#跳表的查找" class="headerlink" title="跳表的查找"></a>跳表的查找</h2><p><font face="逐浪立楷" size=5>在跳表中查找，就是从最高层开始，水平地逐个比较直至当前节点的下一个节点大于等于目标节点，然后移动至下一层。重复这个过程直至到达第一层且无法继续进行操作。此时，若下一个节点是目标节点，则成功查找；反之，则元素不存在。这样一来，查找的过程中会跳过一些没有必要的比较，所以相比于有序链表的查询，跳表的查询更快。</font></p>
+<h2 id="简单理解"><a href="#简单理解" class="headerlink" title="简单理解"></a>简单理解</h2><p><font face="逐浪花体" size=5>跳表就是多层的有序链表</font></p>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/skipList/first.png" alt="引用自维基百科"><br>从图中可以看到， 跳跃表主要由以下部分构成：</p>
+<ul>
+<li>表头（head）：负责维护跳跃表的节点指针。</li>
+<li>跳跃表节点：保存着元素值，以及多个层。</li>
+<li>层：保存着指向其他元素的指针。高层的指针越过的元素数量大于等于低层的指针，为了提高查找的效率，程序总是从高层先开始访问，然后随着元素值范围的缩小，慢慢降低层次。</li>
+<li>表尾：全部由 NULL 组成，表示跳跃表的末尾。</li>
+</ul>
+<h1 id="Redis中的跳表"><a href="#Redis中的跳表" class="headerlink" title="Redis中的跳表"></a>Redis中的跳表</h1><p>为了满足自身的功能需要， Redis 中的跳表进行了以下修改：</p>
+<ol>
+<li>允许重复的 score 值：多个不同的 member 的 score 值可以相同。</li>
+<li>进行对比操作时，不仅要检查 score 值，还要检查 member ：当 score 值可以重复时，单靠 score 值无法判断一个元素的身份，所以需要连 member 域都一并检查才行。</li>
+<li>每个节点都带有一个高度为 1 层的后退指针，用于从表尾方向向表头方向迭代：当执行 ZREVRANGE 或 ZREVRANGEBYSCORE 这类以逆序处理有序集的命令时，就会用到这个属性。</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"> <span class="comment">// Redis中的跳跃表的结构定义</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">zskiplist</span> &#123;</span></span><br><span class="line"><span class="comment">// 头节点，尾节点</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">header</span>, *<span class="title">tail</span>;</span></span><br><span class="line"><span class="comment">// 节点数量</span></span><br><span class="line"><span class="type">unsigned</span> <span class="type">long</span> length;</span><br><span class="line"><span class="comment">// 目前表内节点的最大层数</span></span><br><span class="line"><span class="type">int</span> level;</span><br><span class="line">&#125; </span><br><span class="line">zskiplist;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Redis跳表的节点的结构定义</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> &#123;</span></span><br><span class="line"><span class="comment">// member 对象</span></span><br><span class="line">robj *obj;</span><br><span class="line"><span class="comment">// 分值</span></span><br><span class="line"><span class="type">double</span> score;</span><br><span class="line"><span class="comment">// 后退指针</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">backward</span>;</span></span><br><span class="line"><span class="comment">// 层</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">zskiplistLevel</span> &#123;</span></span><br><span class="line"><span class="comment">// 前进指针</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">zskiplistNode</span> *<span class="title">forward</span>;</span></span><br><span class="line"><span class="comment">// 这个层跨越的节点数量</span></span><br><span class="line"><span class="type">unsigned</span> <span class="type">int</span> span;</span><br><span class="line"> &#125; level[];</span><br><span class="line">&#125;</span><br><span class="line"> zskiplistNode;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>比如在Redis中创建Zset并查找</p>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">redis&gt; ZADD s 6 x 10 y 15 z</span><br><span class="line">(<span class="built_in">integer</span>) 3</span><br><span class="line">redis&gt; ZRANGE s 0 -1 WITHSCORES</span><br><span class="line">1) <span class="string">&quot;x&quot;</span></span><br><span class="line">2) <span class="string">&quot;6&quot;</span></span><br><span class="line">3) <span class="string">&quot;y&quot;</span></span><br><span class="line">4) <span class="string">&quot;10&quot;</span></span><br><span class="line">5) <span class="string">&quot;z&quot;</span></span><br><span class="line">6) <span class="string">&quot;15&quot;</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>在底层实现中， Redis 为 x 、 y 和 z 三个 member 分别创建了三个字符串，<br>值分别为 double 类型的 6 、 10 和 15 ， 然后用跳跃表将这些指针有序地保存起来， 形成这样一个跳跃表：</p>
+</blockquote>
+<p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/skipList/second.png"></p>
+<h1 id="如何理解跳表"><a href="#如何理解跳表" class="headerlink" title="如何理解跳表"></a>如何理解跳表</h1><p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/skipList/third.png"></p>
+<p>首先我们将链表简化成图上我画的这样，最底层就是我们原始的链表，如果我们对其进行查找很显然就是普通的有序单链表查询时间复杂度是O(n)，然后跳表作者借鉴了我们数组中的二分查找思想，用空间换时间，以上便是作者理想的跳表结构。<br>比如我们现在要查找8</p>
+<ol>
+<li>从最高层索引3查找发现 1&lt;8&lt;9,直接从1向下跳到索引2</li>
+<li>在索引2层先查找1&lt;5 &lt;8,接着比较  5 &lt; 8 &lt; 9,发现9大于8，此时从5向下跳到索引1</li>
+<li>在索引1层5 &lt; 7 &lt; 8,接着比较7 &lt; 8 &lt; 9,此时就可以找到了8<br>通过以上查找分析我们可以看到，查找次数确实有了优化，只不过还不太明显，数据越多就越明显</li>
+</ol>
+<h1 id="时间复杂度"><a href="#时间复杂度" class="headerlink" title="时间复杂度"></a>时间复杂度</h1><p>一般是按照两个节点抽一个作为上一级索引的节点，因为我们毕竟是想要借鉴二分的思想达到log2n的时间复杂度,所以一般每层索引都会是上层索引节点个数的2倍</p>
+<p>那第一级索引的结点个数大约就是n&#x2F;2，第二级索引的结点个数大约就是n&#x2F;4，第三级索引的结点个数大约就是n&#x2F;8，依次类推，也就是说，第h级索引的结点个数是第h-1级索引的结点个数的1&#x2F;2，那第h级索引结点的个数的就是n&#x2F;(2^h)</p>
+<p>最高层一般就是2个节点了  此时 2 &#x3D; n &#x2F; 2^h，此时h &#x3D; log2n，根据我们以上我们的简化分析可以知道，每次索引比较的次数不会超过3次，那么我们的时间复杂度就是 <font color=red> 3 * h ~~  Ologn</font>   在我们的Redis中节点数达到256基本就可以实现时间复杂度就是Ologn了</p>
+<h1 id="空间复杂度"><a href="#空间复杂度" class="headerlink" title="空间复杂度"></a>空间复杂度</h1><p>比起单纯的单链表，跳表需要存储多级索引，肯定要消耗更多的存储空间。那到底需要消耗多少额外的存储空间呢？我们来分析一下跳表的空间复杂度。</p>
+<p>跳表的空间复杂度分析并不难，假设原始链表大小为n，那第一级索引大约有n&#x2F;2个结点，第二级索引大约有n&#x2F;4个结点，以此类推，每上升一级就减少一半，直到剩下2个结点。如果我们每层索引的结点数写出来，就是一个等比数列。这几级索引得到结点总和就是n&#x2F;2+n&#x2F;4+n&#x2F;8…+8+4+2&#x3D;n-2。所以，跳表的空间复杂度是O(n)。也就是说，如果将包含n个结点的单链表构造成跳表，我们需要额外再用接近n个结点的存储空间。</p>
+<h1 id="插入和删除"><a href="#插入和删除" class="headerlink" title="插入和删除"></a>插入和删除</h1><p>跳表的增删改查都离不开查，我们都知道链表的增删就是找到位置后进行指针的修改，因此最重要的还是查的时间，因此增删的时间复杂度还是Ologn</p>
+<h1 id="跳表索引动态更新"><a href="#跳表索引动态更新" class="headerlink" title="跳表索引动态更新"></a>跳表索引动态更新</h1><p>当我们不停地往跳表中插入数据时，如果我们不更新索引，就有可能出现某2个索引结点之间数据非常多的情况。极端情况下，跳表还会退化成单链表。<br>作为一种动态数据结构，我们需要某种手段来维护索引与原始链表大小之间的平衡，也就是说，如果链表中结点多了，索引结点就相应地增加一些，避免复杂度退化，以及查找，插入，删除操作性能下降。<br>如果你了解红黑树，AVL树这样平衡二叉树，你就知道他们是通过左右旋的方式保持左右子树的大小平衡（如果不了解也没关系，我们后面会讲），而跳表是通过随机函数来维护前面提到的“平衡性”。<br>当我们往跳表中插入数据的时候，我们可以选择同时将这个数据插入到部分索引层中。如何选择加入哪些索引层呢？<br>我们通过一个随机函数，来决定将这个结点插入到哪几级索引中，比如随机函数生成了值K,那我们就将这个结点添加到第一级到第K级这K级索引中。插入时首先从第一层插入 ，至于上面的层数需不需要插入，就是一个抛硬币的思想，正面一直插入，直到到反面的时候停止插入，因此我们其实也可以知道每一层是其上一层的一半。<br>随机函数的选择很有讲究，从概率上来讲，能够保证跳表的索引大小和数据大小平衡性，不至于性能过度退化。</p>
+<table><tr><td bgcolor=yellow>
+至此，所有讲解已结束，这是作为小白的一个小小记录，如果有帮助到你，我很开心，大佬勿喷~
+当然如果对此文有问题可随时联系我哦~~~ 部分图片来自网络，如有侵权可联系我删除！
+</td></tr></table>]]></content>
+      <categories>
+        <category>数据结构</category>
+      </categories>
+      <tags>
+        <tag>数据结构</tag>
+        <tag>跳表</tag>
+        <tag>Redis</tag>
+      </tags>
+  </entry>
 </search>
