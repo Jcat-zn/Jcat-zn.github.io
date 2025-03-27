@@ -278,4 +278,36 @@
         <tag>渗透</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Docker安装nginx</title>
+    <url>/2024/03/28/Docker%E5%AE%89%E8%A3%85nginx/</url>
+    <content><![CDATA[<h1 id="Docker学习"><a href="#Docker学习" class="headerlink" title="Docker学习"></a>Docker学习</h1><h2 id="安装nginx"><a href="#安装nginx" class="headerlink" title="安装nginx"></a>安装nginx</h2><blockquote>
+<p>搜索镜像</p>
+</blockquote>
+<p>可以在docker hub上面搜索nginx</p>
+<blockquote>
+<p>下载镜像</p>
+</blockquote>
+<p>docker pull nginx</p>
+<blockquote>
+<p>运行测试</p>
+</blockquote>
+<p>-d 后台运行</p>
+<p>–name 给容器命名</p>
+<p>-p 宿主机端口，容器内部端口</p>
+<p>docker run -d –name nginx01 -p 3344:80 nginx</p>
+<blockquote>
+<p>进入容器</p>
+</blockquote>
+<p>docker exec -it nginx01 &#x2F;bin&#x2F;bash</p>
+<p>whereis nginx</p>
+]]></content>
+      <categories>
+        <category>Docker</category>
+      </categories>
+      <tags>
+        <tag>Docker</tag>
+        <tag>nginx</tag>
+      </tags>
+  </entry>
 </search>
