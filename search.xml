@@ -280,7 +280,7 @@
   </entry>
   <entry>
     <title>Docker安装nginx</title>
-    <url>/2024/03/28/Docker%E5%AE%89%E8%A3%85nginx/</url>
+    <url>/2024/03/31/Docker%E5%AE%89%E8%A3%85nginx/</url>
     <content><![CDATA[<h1 id="Docker学习"><a href="#Docker学习" class="headerlink" title="Docker学习"></a>Docker学习</h1><h2 id="安装nginx"><a href="#安装nginx" class="headerlink" title="安装nginx"></a>安装nginx</h2><blockquote>
 <p>搜索镜像</p>
 </blockquote>
@@ -1508,7 +1508,7 @@
   </entry>
   <entry>
     <title>Linux部署软件环境</title>
-    <url>/2024/03/28/LinuxInstall/</url>
+    <url>/2024/03/29/LinuxInstall/</url>
     <content><![CDATA[<h1 id="学会在Linux部署各类软件"><a href="#学会在Linux部署各类软件" class="headerlink" title="学会在Linux部署各类软件"></a>学会在Linux部署各类软件</h1><h2 id="MySQL数据库管理系统安装部署【简单】"><a href="#MySQL数据库管理系统安装部署【简单】" class="headerlink" title="MySQL数据库管理系统安装部署【简单】"></a>MySQL数据库管理系统安装部署【简单】</h2><h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>MySQL数据库管理系统（后续简称MySQL），是一款知名的数据库系统，其特点是：轻量、简单、功能丰富。</p>
 <p>MySQL数据库可谓是软件行业的明星产品，无论是后端开发、大数据、AI、运维、测试等各类岗位，基本上都会和MySQL打交道。</p>
 <p>让我们从MySQL开始，进行实战的Linux软件安装部署。</p>
@@ -1882,7 +1882,7 @@
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">netstat -anp | grep 8080</span><br></pre></td></tr></table></figure>
 <p><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/LinuxInstall/TomcatFive.png"></p>
 <ul>
-<li>打开浏览器，输入：<br><a href="http://centos:8080或http://192.168.88.130:8080">http://centos:8080或http://192.168.88.130:8080</a></li>
+<li>打开浏览器，输入：<br><a href="http://centos:8080或http://192.168.88.130:8080"></a></li>
 </ul>
 <p>使用主机名（需配置好本地的主机名映射）或IP地址访问Tomcat的WEB页面<br><img src="https://web-test1zj.oss-cn-beijing.aliyuncs.com/youyaJieBlog/LinuxInstall/TomcatSix.png"><br>至此，Tomcat安装配置完成。</p>
 <h2 id="Nginx安装部署【简单】"><a href="#Nginx安装部署【简单】" class="headerlink" title="Nginx安装部署【简单】"></a>Nginx安装部署【简单】</h2><h3 id="简介-2"><a href="#简介-2" class="headerlink" title="简介"></a>简介</h3><p>Nginx (engine x) 是一个高性能的HTTP和反向代理web服务器，同时也提供了IMAP&#x2F;POP3&#x2F;SMTP服务。</p>
@@ -2993,6 +2993,25 @@
       </categories>
       <tags>
         <tag>Linux</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>若依实现操作日志</title>
+    <url>/2024/04/22/ruoyi/</url>
+    <content><![CDATA[<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 处理完请求后执行</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> joinPoint 切点</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@AfterReturning(pointcut = &quot;@annotation(controllerLog)&quot;, returning = &quot;jsonResult&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doAfterReturning</span><span class="params">(JoinPoint joinPoint, Log controllerLog, Object jsonResult)</span> &#123;</span><br><span class="line">    handleLog(joinPoint, controllerLog, <span class="literal">null</span>, jsonResult);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<blockquote>
+<p><font color = red>@annotation</font> 是 Spring AOP 中用于匹配带有特定注解的方法的切入点表达式。它允许你指定一个注解类型作为切入点的一部分，并且只有带有指定注解的方法才会被拦截。<br>在切入点表达式中，<font color = red>@annotation(annotationType)</font> 使用了 <font color = red>@annotation</font> 通配符，后面跟着括号和注解类型。例如：</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Pointcut(&quot;@annotation(com.example.Log)&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">logPointcut</span><span class="params">()</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>这个切入点表达式匹配了所有被 @Log 注解标记的方法，因为它使用了 @annotation 通配符，后面指定了 com.example.Log 这个注解类型。这样，在切面中的通知方法就可以拦截到带有 @Log 注解的方法了。</p>
+]]></content>
+      <categories>
+        <category>Java</category>
+      </categories>
+      <tags>
+        <tag>Java</tag>
       </tags>
   </entry>
 </search>
